@@ -16,21 +16,9 @@
 
 package com.alibaba.nacos.common.http;
 
-import com.alibaba.nacos.common.http.handler.RequestHandler;
-import com.alibaba.nacos.common.http.param.Header;
 import com.alibaba.nacos.common.utils.HttpMethod;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import com.alibaba.nacos.common.utils.StringUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.HttpRequest;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
@@ -39,17 +27,16 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.methods.HttpTrace;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.message.BasicNameValuePair;
 
 /**
+ * Base http method.
+ *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 public enum BaseHttpMethod {
-
+    
     /**
-     * get request
+     * get request.
      */
     GET(HttpMethod.GET) {
         @Override
@@ -57,16 +44,16 @@ public enum BaseHttpMethod {
             return new HttpGet(url);
         }
     },
-
+    
     GET_LARGE(HttpMethod.GET_LARGE) {
         @Override
         protected HttpRequestBase createRequest(String url) {
             return new BaseHttpClient.HttpGetWithEntity(url);
         }
     },
-
+    
     /**
-     * post request
+     * post request.
      */
     POST(HttpMethod.POST) {
         @Override
@@ -74,9 +61,9 @@ public enum BaseHttpMethod {
             return new HttpPost(url);
         }
     },
-
+    
     /**
-     * put request
+     * put request.
      */
     PUT(HttpMethod.PUT) {
         @Override
@@ -84,9 +71,9 @@ public enum BaseHttpMethod {
             return new HttpPut(url);
         }
     },
-
+    
     /**
-     * delete request
+     * delete request.
      */
     DELETE(HttpMethod.DELETE) {
         @Override
@@ -94,9 +81,9 @@ public enum BaseHttpMethod {
             return new HttpDelete(url);
         }
     },
-
+    
     /**
-     * head request
+     * head request.
      */
     HEAD(HttpMethod.HEAD) {
         @Override
@@ -104,9 +91,9 @@ public enum BaseHttpMethod {
             return new HttpHead(url);
         }
     },
-
+    
     /**
-     * trace request
+     * trace request.
      */
     TRACE(HttpMethod.TRACE) {
         @Override
@@ -114,9 +101,9 @@ public enum BaseHttpMethod {
             return new HttpTrace(url);
         }
     },
-
+    
     /**
-     * patch request
+     * patch request.
      */
     PATCH(HttpMethod.PATCH) {
         @Override
@@ -124,74 +111,37 @@ public enum BaseHttpMethod {
             return new HttpPatch(url);
         }
     },
-
+    
     /**
-     * options request
+     * options request.
      */
     OPTIONS(HttpMethod.OPTIONS) {
         @Override
         protected HttpRequestBase createRequest(String url) {
             return new HttpTrace(url);
         }
-    },
-
-    ;
-
+    };
+    
     private String name;
-
-    private HttpRequest requestBase;
-
+    
     BaseHttpMethod(String name) {
         this.name = name;
     }
-
-    public void init(String url) {
-        requestBase = createRequest(url);
+    
+    public HttpRequestBase init(String url) {
+        return createRequest(url);
     }
-
+    
     protected HttpRequestBase createRequest(String url) {
         throw new UnsupportedOperationException();
     }
-
-    public void initHeader(Header header) {
-        Iterator<Map.Entry<String, String>> iterator = header.iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<String, String> entry = iterator.next();
-            requestBase.setHeader(entry.getKey(), entry.getValue());
-        }
-    }
-
-    public void initEntity(Object body, String mediaType) throws Exception {
-        if (body == null) {
-            return;
-        }
-        if (requestBase instanceof HttpEntityEnclosingRequest) {
-            HttpEntityEnclosingRequest request = (HttpEntityEnclosingRequest) requestBase;
-            ContentType contentType = ContentType.create(mediaType);
-            StringEntity entity = new StringEntity(RequestHandler.parse(body), contentType);
-            request.setEntity(entity);
-        }
-    }
-
-    public void initFromEntity(Map<String, String> body, String charset) throws Exception{
-        if (body.isEmpty()) {
-            return;
-        }
-        List<NameValuePair> params = new ArrayList<NameValuePair>(body.size());
-        for (Map.Entry<String, String> entry : body.entrySet()) {
-            params.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
-        }
-        if (requestBase instanceof HttpEntityEnclosingRequest) {
-            HttpEntityEnclosingRequest request = (HttpEntityEnclosingRequest) requestBase;
-            HttpEntity entity = new UrlEncodedFormEntity(params, charset);
-            request.setEntity(entity);
-        }
-    }
-
-    public HttpRequestBase getRequestBase() {
-        return (HttpRequestBase) requestBase;
-    }
-
+    
+    /**
+     * Value of {@link BaseHttpMethod}.
+     *
+     * @param name method name
+     * @return {@link BaseHttpMethod}
+     */
     public static BaseHttpMethod sourceOf(String name) {
         for (BaseHttpMethod method : BaseHttpMethod.values()) {
             if (StringUtils.equalsIgnoreCase(name, method.name)) {
@@ -200,5 +150,5 @@ public enum BaseHttpMethod {
         }
         throw new IllegalArgumentException("Unsupported http method : " + name);
     }
-
+    
 }
