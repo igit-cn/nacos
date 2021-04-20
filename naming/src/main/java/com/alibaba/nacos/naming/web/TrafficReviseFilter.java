@@ -17,7 +17,7 @@
 package com.alibaba.nacos.naming.web;
 
 import com.alibaba.nacos.common.utils.HttpMethod;
-import com.alibaba.nacos.core.utils.Constants;
+import com.alibaba.nacos.sys.env.Constants;
 import com.alibaba.nacos.core.utils.WebUtils;
 import com.alibaba.nacos.naming.cluster.ServerStatus;
 import com.alibaba.nacos.naming.cluster.ServerStatusManager;
@@ -97,8 +97,12 @@ public class TrafficReviseFilter implements Filter {
             return;
         }
         
-        resp.getWriter()
-                .write("server is " + serverStatusManager.getServerStatus().name() + " now, please try again later!");
+        final String statusMsg = "server is " + serverStatusManager.getServerStatus().name() + "now";
+        if (serverStatusManager.getErrorMsg().isPresent()) {
+            resp.getWriter().write(statusMsg + ", detailed error message: " + serverStatusManager.getErrorMsg());
+        } else {
+            resp.getWriter().write(statusMsg  + ", please try again later!");
+        }
         resp.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
     }
 }

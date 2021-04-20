@@ -19,6 +19,7 @@ package com.alibaba.nacos.client.config;
 import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.common.Constants;
 import com.alibaba.nacos.api.config.ConfigService;
+import com.alibaba.nacos.api.config.ConfigType;
 import com.alibaba.nacos.api.config.listener.Listener;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.client.config.filter.impl.ConfigFilterChainManager;
@@ -112,7 +113,12 @@ public class NacosConfigService implements ConfigService {
     
     @Override
     public boolean publishConfig(String dataId, String group, String content) throws NacosException {
-        return publishConfigInner(namespace, dataId, group, null, null, null, content);
+        return publishConfig(dataId, group, content, ConfigType.getDefaultType().getType());
+    }
+    
+    @Override
+    public boolean publishConfig(String dataId, String group, String content, String type) throws NacosException {
+        return publishConfigInner(namespace, dataId, group, null, null, null, content, type);
     }
     
     @Override
@@ -126,7 +132,7 @@ public class NacosConfigService implements ConfigService {
     }
     
     private String getConfigInner(String tenant, String dataId, String group, long timeoutMs) throws NacosException {
-        group = null2defaultGroup(group);
+        group = blank2defaultGroup(group);
         ParamUtils.checkKeyParam(dataId, group);
         ConfigResponse cr = new ConfigResponse();
         
@@ -170,12 +176,12 @@ public class NacosConfigService implements ConfigService {
         return content;
     }
     
-    private String null2defaultGroup(String group) {
-        return (null == group) ? Constants.DEFAULT_GROUP : group.trim();
+    private String blank2defaultGroup(String group) {
+        return (StringUtils.isBlank(group)) ? Constants.DEFAULT_GROUP : group.trim();
     }
     
     private boolean removeConfigInner(String tenant, String dataId, String group, String tag) throws NacosException {
-        group = null2defaultGroup(group);
+        group = blank2defaultGroup(group);
         ParamUtils.checkKeyParam(dataId, group);
         String url = Constants.CONFIG_CONTROLLER_PATH;
         Map<String, String> params = new HashMap<String, String>(4);
@@ -211,8 +217,8 @@ public class NacosConfigService implements ConfigService {
     }
     
     private boolean publishConfigInner(String tenant, String dataId, String group, String tag, String appName,
-            String betaIps, String content) throws NacosException {
-        group = null2defaultGroup(group);
+            String betaIps, String content, String type) throws NacosException {
+        group = blank2defaultGroup(group);
         ParamUtils.checkParam(dataId, group, content);
         
         ConfigRequest cr = new ConfigRequest();
@@ -228,6 +234,7 @@ public class NacosConfigService implements ConfigService {
         params.put("dataId", dataId);
         params.put("group", group);
         params.put("content", content);
+        params.put("type", type);
         if (StringUtils.isNotEmpty(tenant)) {
             params.put("tenant", tenant);
         }

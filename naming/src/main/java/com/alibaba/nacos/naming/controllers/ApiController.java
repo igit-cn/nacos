@@ -88,8 +88,8 @@ public class ApiController extends InstanceController {
             }
             
             if (CollectionUtils.isEmpty(domSet)) {
-                result.put("doms", JacksonUtils.transferToJsonNode(new HashSet<>()));
                 result.put("count", 0);
+                result.set("doms", JacksonUtils.transferToJsonNode(new HashSet<>()));
                 return result;
             }
             
@@ -99,8 +99,8 @@ public class ApiController extends InstanceController {
                 }
             }
             
-            result.put("doms", JacksonUtils.transferToJsonNode(doms));
             result.put("count", doms.size());
+            result.set("doms", JacksonUtils.transferToJsonNode(doms));
             return result;
         }
         
@@ -116,8 +116,8 @@ public class ApiController extends InstanceController {
             count += doms.get(namespaceId).size();
         }
         
-        result.put("doms", JacksonUtils.transferToJsonNode(doms));
         result.put("count", count);
+        result.set("doms", JacksonUtils.transferToJsonNode(doms));
         
         return result;
     }
@@ -126,7 +126,7 @@ public class ApiController extends InstanceController {
      * Get service ips.
      *
      * @param request http request
-     * @return service detail infomation
+     * @return service detail information
      * @throws Exception exception
      */
     @RequestMapping("/srvIPXT")
