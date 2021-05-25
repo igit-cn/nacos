@@ -71,6 +71,18 @@ public class IPUtilTest {
         Assert.assertEquals("", IPUtil.getIPFromString(
                 "jdbc:mysql://666.288.333.444:3306/nacos_config_test?characterEncoding=utf8&connectTimeout=1000"
                         + "&socketTimeout=3000&autoReconnect=true&useUnicode=true&useSSL=false&serverTimezone=UTC"));
+        Assert.assertEquals("", IPUtil.getIPFromString(
+                "jdbc:mysql://292.168.1.1:3306/nacos_config_test?characterEncoding=utf8&connectTimeout=1000"
+                        + "&socketTimeout=3000&autoReconnect=true&useUnicode=true&useSSL=false&serverTimezone=UTC"));
+        Assert.assertEquals("", IPUtil.getIPFromString(
+                "jdbc:mysql://29.168.1.288:3306/nacos_config_test?characterEncoding=utf8&connectTimeout=1000"
+                        + "&socketTimeout=3000&autoReconnect=true&useUnicode=true&useSSL=false&serverTimezone=UTC"));
+        Assert.assertEquals("", IPUtil.getIPFromString(
+                "jdbc:mysql://29.168.288.28:3306/nacos_config_test?characterEncoding=utf8&connectTimeout=1000"
+                        + "&socketTimeout=3000&autoReconnect=true&useUnicode=true&useSSL=false&serverTimezone=UTC"));
+        Assert.assertEquals("", IPUtil.getIPFromString(
+                "jdbc:mysql://29.288.28.28:3306/nacos_config_test?characterEncoding=utf8&connectTimeout=1000"
+                        + "&socketTimeout=3000&autoReconnect=true&useUnicode=true&useSSL=false&serverTimezone=UTC"));
     }
     
     @Test
@@ -92,6 +104,15 @@ public class IPUtilTest {
         checkSplitIPPortStr("::1:88", true);
         checkSplitIPPortStr("[::1:88", true);
         checkSplitIPPortStr("[127.0.0.1]:88", true);
+    }
+    
+    @Test
+    public void testCheckIPs() {
+        String[] ips = {"127.0.0.1"};
+        Assert.assertEquals("ok", IPUtil.checkIPs(ips));
+        
+        String[] illegalIps = {"127.100.19", "127.0.0.1"};
+        Assert.assertEquals("illegal ip: 127.100.19", IPUtil.checkIPs(illegalIps));
     }
     
     /**
