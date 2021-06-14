@@ -23,7 +23,7 @@ import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.alibaba.nacos.api.naming.pojo.ServiceInfo;
 import com.alibaba.nacos.api.naming.utils.NamingUtils;
 import com.alibaba.nacos.common.utils.ConvertUtils;
-import com.alibaba.nacos.common.utils.IPUtil;
+import com.alibaba.nacos.common.utils.InternetAddressUtil;
 import com.alibaba.nacos.naming.core.v2.ServiceManager;
 import com.alibaba.nacos.naming.core.v2.client.Client;
 import com.alibaba.nacos.naming.core.v2.client.impl.IpPortBasedClient;
@@ -46,6 +46,7 @@ import com.alibaba.nacos.naming.misc.SwitchDomain;
 import com.alibaba.nacos.naming.misc.UtilsAndCommons;
 import com.alibaba.nacos.naming.pojo.InstanceOperationInfo;
 import com.alibaba.nacos.naming.pojo.Subscriber;
+import com.alibaba.nacos.naming.push.UdpPushService;
 import com.alibaba.nacos.naming.utils.ServiceUtil;
 
 import java.util.HashMap;
@@ -74,16 +75,19 @@ public class InstanceOperatorClientImpl implements InstanceOperator {
     
     private final SwitchDomain switchDomain;
     
+    private final UdpPushService pushService;
+    
     public InstanceOperatorClientImpl(ClientManagerDelegate clientManager,
             ClientOperationServiceProxy clientOperationService, ServiceStorage serviceStorage,
             NamingMetadataOperateService metadataOperateService, NamingMetadataManager metadataManager,
-            SwitchDomain switchDomain) {
+            SwitchDomain switchDomain, UdpPushService pushService) {
         this.clientManager = clientManager;
         this.clientOperationService = clientOperationService;
         this.serviceStorage = serviceStorage;
         this.metadataOperateService = metadataOperateService;
         this.metadataManager = metadataManager;
         this.switchDomain = switchDomain;
+        this.pushService = pushService;
     }
     
     /**
@@ -168,7 +172,8 @@ public class InstanceOperatorClientImpl implements InstanceOperator {
     public ServiceInfo listInstance(String namespaceId, String serviceName, Subscriber subscriber, String cluster,
             boolean healthOnly) {
         Service service = getService(namespaceId, serviceName, true);
-        if (subscriber.getPort() > 0) {
+        // For adapt 1.X subscribe logic
+        if (subscriber.getPort() > 0 && pushService.canEnablePush(subscriber.getAgent())) {
             String clientId = IpPortBasedClient.getClientId(subscriber.getAddrStr(), true);
             createIpPortClientIfAbsent(clientId, true);
             clientOperationService.subscribeService(service, subscriber, clientId);
@@ -207,7 +212,7 @@ public class InstanceOperatorClientImpl implements InstanceOperator {
     public int handleBeat(String namespaceId, String serviceName, String ip, int port, String cluster,
             RsInfo clientBeat) throws NacosException {
         Service service = getService(namespaceId, serviceName, true);
-        String clientId = IpPortBasedClient.getClientId(ip + IPUtil.IP_PORT_SPLITER + port, true);
+        String clientId = IpPortBasedClient.getClientId(ip + InternetAddressUtil.IP_PORT_SPLITER + port, true);
         IpPortBasedClient client = (IpPortBasedClient) clientManager.getClient(clientId);
         if (null == client || !client.getAllPublishedService().contains(service)) {
             if (null == clientBeat) {
@@ -251,7 +256,7 @@ public class InstanceOperatorClientImpl implements InstanceOperator {
                 .containsKey(PreservedMetadataKeys.HEART_BEAT_INTERVAL)) {
             return ConvertUtils.toLong(metadata.get().getExtendData().get(PreservedMetadataKeys.HEART_BEAT_INTERVAL));
         }
-        String clientId = IpPortBasedClient.getClientId(ip + IPUtil.IP_PORT_SPLITER + port, true);
+        String clientId = IpPortBasedClient.getClientId(ip + InternetAddressUtil.IP_PORT_SPLITER + port, true);
         Client client = clientManager.getClient(clientId);
         InstancePublishInfo instance = null != client ? client.getInstancePublishInfo(service) : null;
         if (null != instance && instance.getExtendDatum().containsKey(PreservedMetadataKeys.HEART_BEAT_INTERVAL)) {
