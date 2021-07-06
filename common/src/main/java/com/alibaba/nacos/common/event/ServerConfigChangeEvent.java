@@ -14,31 +14,25 @@
  * limitations under the License.
  */
 
-package com.alibaba.nacos.common.utils;
+package com.alibaba.nacos.common.event;
+
+import com.alibaba.nacos.common.notify.Event;
 
 /**
- * Nacos number util.
+ * Server configuration changed event.
+ *
+ * <p>
+ * When nacos server configuration file (default nacos/conf/application.properties) changed, The event should be notify
+ * to all subscriber.
+ * </p>
  *
  * @author xiweng.yy
  */
-public class NumberUtil {
+public class ServerConfigChangeEvent extends Event {
     
-    /**
-     * Whether all chars of input string is digit.
-     *
-     * @param input {@code String} checked
-     * @return {@code true} if all chars is digit, otherwise false
-     */
-    public static boolean isDigits(String input) {
-        if (StringUtils.isEmpty(input)) {
-            return false;
-        }
-        for (int i = 0; i < input.length(); i++) {
-            if (!Character.isDigit(input.charAt(i))) {
-                return false;
-            }
-        }
-        return true;
+    private static final long serialVersionUID = 289992068985663172L;
+    
+    public static ServerConfigChangeEvent newEvent() {
+        return new ServerConfigChangeEvent();
     }
-    
 }

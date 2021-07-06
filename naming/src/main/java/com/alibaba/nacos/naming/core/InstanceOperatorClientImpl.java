@@ -26,6 +26,7 @@ import com.alibaba.nacos.common.utils.ConvertUtils;
 import com.alibaba.nacos.common.utils.InternetAddressUtil;
 import com.alibaba.nacos.naming.core.v2.ServiceManager;
 import com.alibaba.nacos.naming.core.v2.client.Client;
+import com.alibaba.nacos.naming.core.v2.client.ClientAttributes;
 import com.alibaba.nacos.naming.core.v2.client.impl.IpPortBasedClient;
 import com.alibaba.nacos.naming.core.v2.client.manager.ClientManager;
 import com.alibaba.nacos.naming.core.v2.client.manager.ClientManagerDelegate;
@@ -40,6 +41,7 @@ import com.alibaba.nacos.naming.core.v2.service.ClientOperationService;
 import com.alibaba.nacos.naming.core.v2.service.ClientOperationServiceProxy;
 import com.alibaba.nacos.naming.healthcheck.HealthCheckReactor;
 import com.alibaba.nacos.naming.healthcheck.RsInfo;
+import com.alibaba.nacos.naming.healthcheck.heartbeat.ClientBeatExtensionHandler;
 import com.alibaba.nacos.naming.healthcheck.heartbeat.ClientBeatProcessorV2;
 import com.alibaba.nacos.naming.misc.Loggers;
 import com.alibaba.nacos.naming.misc.SwitchDomain;
@@ -49,6 +51,7 @@ import com.alibaba.nacos.naming.pojo.Subscriber;
 import com.alibaba.nacos.naming.push.UdpPushService;
 import com.alibaba.nacos.naming.utils.ServiceUtil;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -97,7 +100,7 @@ public class InstanceOperatorClientImpl implements InstanceOperator {
     public void registerInstance(String namespaceId, String serviceName, Instance instance) {
         boolean ephemeral = instance.isEphemeral();
         String clientId = IpPortBasedClient.getClientId(instance.toInetAddr(), ephemeral);
-        createIpPortClientIfAbsent(clientId, ephemeral);
+        createIpPortClientIfAbsent(clientId);
         Service service = getService(namespaceId, serviceName, ephemeral);
         clientOperationService.registerInstance(service, instance, clientId);
     }
@@ -175,7 +178,7 @@ public class InstanceOperatorClientImpl implements InstanceOperator {
         // For adapt 1.X subscribe logic
         if (subscriber.getPort() > 0 && pushService.canEnablePush(subscriber.getAgent())) {
             String clientId = IpPortBasedClient.getClientId(subscriber.getAddrStr(), true);
-            createIpPortClientIfAbsent(clientId, true);
+            createIpPortClientIfAbsent(clientId);
             clientOperationService.subscribeService(service, subscriber, clientId);
         }
         ServiceInfo serviceInfo = serviceStorage.getData(service);
@@ -210,7 +213,7 @@ public class InstanceOperatorClientImpl implements InstanceOperator {
     
     @Override
     public int handleBeat(String namespaceId, String serviceName, String ip, int port, String cluster,
-            RsInfo clientBeat) throws NacosException {
+            RsInfo clientBeat, Collection<ClientBeatExtensionHandler> extensionHandlers) throws NacosException {
         Service service = getService(namespaceId, serviceName, true);
         String clientId = IpPortBasedClient.getClientId(ip + InternetAddressUtil.IP_PORT_SPLITER + port, true);
         IpPortBasedClient client = (IpPortBasedClient) clientManager.getClient(clientId);
@@ -227,6 +230,9 @@ public class InstanceOperatorClientImpl implements InstanceOperator {
             instance.setServiceName(serviceName);
             instance.setInstanceId(instance.getInstanceId());
             instance.setEphemeral(clientBeat.isEphemeral());
+            for (ClientBeatExtensionHandler each : extensionHandlers) {
+                each.handleExtensionInfo(instance);
+            }
             registerInstance(namespaceId, serviceName, instance);
             client = (IpPortBasedClient) clientManager.getClient(clientId);
         }
@@ -326,9 +332,9 @@ public class InstanceOperatorClientImpl implements InstanceOperator {
         return result;
     }
     
-    private void createIpPortClientIfAbsent(String clientId, boolean ephemeral) {
+    private void createIpPortClientIfAbsent(String clientId) {
         if (!clientManager.contains(clientId)) {
-            clientManager.clientConnected(new IpPortBasedClient(clientId, ephemeral));
+            clientManager.clientConnected(clientId, new ClientAttributes());
         }
     }
     
