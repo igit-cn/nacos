@@ -43,9 +43,8 @@ import com.alibaba.nacos.config.server.service.repository.PersistService;
 import com.alibaba.nacos.config.server.utils.LogUtil;
 import com.alibaba.nacos.config.server.utils.ParamUtils;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
+import com.alibaba.nacos.common.utils.StringUtils;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -615,7 +614,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
         final String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
         final StringBuilder datumString = new StringBuilder();
         for (String datum : datumList) {
-            datumString.append("'").append(datum).append("',");
+            datumString.append('\'').append(datum).append("',");
         }
         datumString.deleteCharAt(datumString.length() - 1);
         final String sql =
@@ -813,7 +812,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
                 if (i != 0) {
                     sql.append(", ");
                 }
-                sql.append("?");
+                sql.append('?');
                 paramList.add(tagArr[i]);
             }
             sql.append(") ");
@@ -942,8 +941,8 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
                     sqlCount.append(", ");
                     sql.append(", ");
                 }
-                sqlCount.append("?");
-                sql.append("?");
+                sqlCount.append('?');
+                sql.append('?');
                 paramList.add(tagArr[i]);
             }
             sqlCount.append(") ");
@@ -1008,7 +1007,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
                 if (i != 0) {
                     where.append(", ");
                 }
-                where.append("?");
+                where.append('?');
                 paramList.add(tagArr[i]);
             }
             where.append(") ");
@@ -1109,8 +1108,8 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
                     sqlCount.append(", ");
                     sql.append(", ");
                 }
-                sqlCount.append("?");
-                sql.append("?");
+                sqlCount.append('?');
+                sql.append('?');
                 paramList.add(tagArr[i]);
             }
             sqlCount.append(") ");
@@ -1181,8 +1180,8 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
                     sqlCount.append(", ");
                     sql.append(", ");
                 }
-                sqlCount.append("?");
-                sql.append("?");
+                sqlCount.append('?');
+                sql.append('?');
                 paramList.add(tagArr[i]);
             }
             sqlCount.append(") ");
@@ -1306,11 +1305,11 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
             if (i > 0) {
                 sql.append(", ");
             }
-            sql.append("?");
+            sql.append('?');
         }
-        sql.append(")");
+        sql.append(')');
         
-        List<Object> objectList = Lists.<Object>newArrayList(dataId, group, tenantTmp);
+        List<Object> objectList = com.alibaba.nacos.common.utils.CollectionUtils.list(dataId, group, tenantTmp);
         objectList.addAll(datumIds);
         Integer result = jt.queryForObject(sql.toString(), Integer.class, objectList.toArray());
         if (result == null) {
@@ -1499,9 +1498,9 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
                     dataIds.subList(i, i + subQueryLimit < dataIds.size() ? i + subQueryLimit : dataIds.size()));
             
             for (int j = 0; j < params.size(); j++) {
-                subQuerySql.append("?");
+                subQuerySql.append('?');
                 if (j != params.size() - 1) {
-                    subQuerySql.append(",");
+                    subQuerySql.append(',');
                 }
             }
             
@@ -1601,7 +1600,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
                     where.append(" AND ");
                 }
                 
-                where.append("(");
+                where.append('(');
                 boolean isFirstSub = true;
                 if (!StringUtils.isBlank(dataId)) {
                     where.append(" data_id NOT LIKE ? ");
@@ -1632,7 +1631,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
                 } else {
                     where.append(" OR ");
                 }
-                where.append("(");
+                where.append('(');
                 boolean isFirstSub = true;
                 if (!StringUtils.isBlank(dataId)) {
                     where.append(" data_id LIKE ? ");
@@ -1709,7 +1708,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
                 if (i != 0) {
                     where.append(", ");
                 }
-                where.append("?");
+                where.append('?');
                 params.add(tagArr[i]);
             }
             where.append(") ");
@@ -1868,7 +1867,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
                     where.append(" AND ");
                 }
                 
-                where.append("(");
+                where.append('(');
                 boolean isFirstSub = true;
                 if (!StringUtils.isBlank(dataId)) {
                     where.append(" data_id NOT LIKE ? ");
@@ -1899,7 +1898,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
                 } else {
                     where.append(" OR ");
                 }
-                where.append("(");
+                where.append('(');
                 boolean isFirstSub = true;
                 if (!StringUtils.isBlank(dataId)) {
                     where.append(" data_id LIKE ? ");
@@ -2187,7 +2186,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
             if (i != 0) {
                 sql.append(", ");
             }
-            sql.append("?");
+            sql.append('?');
             paramList.add(Long.parseLong(tagArr[i]));
         }
         sql.append(") ");
@@ -2273,7 +2272,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
             if (i != 0) {
                 sql.append(", ");
             }
-            sql.append("?");
+            sql.append('?');
             paramList.add(Long.parseLong(tagArr[i]));
         }
         sql.append(") ");
@@ -2301,7 +2300,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
                     if (configTagsTmp.length() == 0) {
                         configTagsTmp.append(configTag);
                     } else {
-                        configTagsTmp.append(",").append(configTag);
+                        configTagsTmp.append(',').append(configTag);
                     }
                 }
                 configAdvance.setConfigTags(configTagsTmp.toString());
@@ -2331,7 +2330,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
                     if (configTagsTmp.length() == 0) {
                         configTagsTmp.append(configTag);
                     } else {
-                        configTagsTmp.append(",").append(configTag);
+                        configTagsTmp.append(',').append(configTag);
                     }
                 }
                 configAdvance.setConfigTags(configTagsTmp.toString());
@@ -2666,7 +2665,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
                 if (i != 0) {
                     where.append(", ");
                 }
-                where.append("?");
+                where.append('?');
                 paramList.add(ids.get(i));
             }
             where.append(") ");
