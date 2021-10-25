@@ -28,7 +28,6 @@ import com.alibaba.nacos.naming.core.v2.metadata.NamingMetadataManager;
 import com.alibaba.nacos.naming.core.v2.metadata.NamingMetadataOperateService;
 import com.alibaba.nacos.naming.core.v2.metadata.ServiceMetadata;
 import com.alibaba.nacos.naming.core.v2.pojo.Service;
-import com.alibaba.nacos.naming.utils.ServiceUtil;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.stereotype.Component;
@@ -36,7 +35,6 @@ import org.springframework.stereotype.Component;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -82,6 +80,11 @@ public class ServiceOperatorV2Impl implements ServiceOperator {
     @Override
     public void delete(String namespaceId, String serviceName) throws NacosException {
         Service service = getServiceFromGroupedServiceName(namespaceId, serviceName, true);
+        if (!ServiceManager.getInstance().containSingleton(service)) {
+            throw new NacosException(NacosException.INVALID_PARAM,
+                    String.format("service %s not found!", service.getGroupedServiceName()));
+        }
+        
         if (!serviceStorage.getPushData(service).getHosts().isEmpty()) {
             throw new NacosException(NacosException.INVALID_PARAM,
                     "Service " + serviceName + " is not empty, can't be delete. Please unregister instance first");
@@ -91,8 +94,12 @@ public class ServiceOperatorV2Impl implements ServiceOperator {
     
     @Override
     public ObjectNode queryService(String namespaceId, String serviceName) throws NacosException {
-        ObjectNode result = JacksonUtils.createEmptyJsonNode();
         Service service = getServiceFromGroupedServiceName(namespaceId, serviceName, true);
+        if (!ServiceManager.getInstance().containSingleton(service)) {
+            throw new NacosException(NacosException.INVALID_PARAM,
+                    "service not found, namespace: " + namespaceId + ", serviceName: " + serviceName);
+        }
+        ObjectNode result = JacksonUtils.createEmptyJsonNode();
         ServiceMetadata serviceMetadata = metadataManager.getServiceMetadata(service).orElse(new ServiceMetadata());
         setServiceMetadata(result, serviceMetadata, service);
         ArrayNode clusters = JacksonUtils.createEmptyArrayNode();
@@ -127,15 +134,14 @@ public class ServiceOperatorV2Impl implements ServiceOperator {
     
     @Override
     @SuppressWarnings("unchecked")
-    public List<String> listService(String namespaceId, String groupName, String selector, int pageSize, int pageNo)
+    public Collection<String> listService(String namespaceId, String groupName, String selector)
             throws NacosException {
         Collection<Service> services = ServiceManager.getInstance().getSingletons(namespaceId);
         if (services.isEmpty()) {
             return Collections.EMPTY_LIST;
         }
-        Collection<String> serviceNameSet = selectServiceWithGroupName(services, groupName);
         // TODO select service by selector
-        return ServiceUtil.pageServiceName(pageNo, pageSize, serviceNameSet);
+        return selectServiceWithGroupName(services, groupName);
     }
     
     private Collection<String> selectServiceWithGroupName(Collection<Service> serviceSet, String groupName) {
